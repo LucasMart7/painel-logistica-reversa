@@ -1,0 +1,37 @@
+{
+  "nome": "Logística Reversa · Dispositivos",
+  "descricao": "Itens em logística reversa por grupo e modelo, situação da triagem de bancada e ritmo de entradas. Dados fictícios.",
+  "colecao": "Painel de Logística Reversa",
+  "filtros": [
+    {"slug": "grupo", "nome": "Grupo", "valores": ["Rastreadores", "Câmeras", "Leitores Vega", "Leitores Orion"]},
+    {"slug": "modelo", "nome": "Modelo", "valores": ["TRK310", "TRK220", "TRK100", "CAM410", "CAM370", "CAM450", "Vega RFID c/ senha", "Vega RFID", "Orion RFID c/ senha", "Orion RFID"]},
+    {"slug": "situacao", "nome": "Situação", "valores": ["Danificado", "Debugg", "Não triado"]}
+  ],
+  "cores": {
+    "Rastreadores": "#2A78D6", "Câmeras": "#EB6834", "Leitores Vega": "#1BAF7A", "Leitores Orion": "#EDA100",
+    "Não triado": "#A3A29B", "Debugg": "#FAB219", "Danificado": "#D03B3B"
+  },
+  "cards": [
+    {"arquivo": "01_total.sql", "nome": "Total em logística reversa", "tipo": "scalar", "pos": [0, 0, 4, 3]},
+    {"arquivo": "02_rastreadores.sql", "nome": "Rastreadores", "tipo": "scalar", "pos": [0, 4, 5, 3]},
+    {"arquivo": "03_cameras.sql", "nome": "Câmeras", "tipo": "scalar", "pos": [0, 9, 5, 3]},
+    {"arquivo": "04_leitores_vega.sql", "nome": "Leitores Vega", "tipo": "scalar", "pos": [0, 14, 5, 3]},
+    {"arquivo": "05_leitores_orion.sql", "nome": "Leitores Orion (legado)", "tipo": "scalar", "pos": [0, 19, 5, 3]},
+    {"arquivo": "06_quantidade_por_modelo.sql", "nome": "Quantidade por modelo", "tipo": "bar", "pos": [3, 0, 16, 9],
+     "visual": {"graph.dimensions": ["Modelo", "Grupo"], "graph.metrics": ["Quantidade"], "stackable.stack_type": "stacked", "graph.show_values": true, "cores_por_serie": true}},
+    {"arquivo": "07_distribuicao_por_grupo.sql", "nome": "Distribuição por grupo", "tipo": "pie", "pos": [3, 16, 8, 9],
+     "visual": {"pie.dimension": "Grupo", "pie.metric": "Quantidade"}},
+    {"titulo": "Situação da triagem · rastreadores e câmeras (leitores não passam pela triagem)", "pos": [12, 0, 24, 1]},
+    {"arquivo": "08_danificados.sql", "nome": "Danificados", "tipo": "scalar", "pos": [13, 0, 8, 3]},
+    {"arquivo": "09_em_debugg.sql", "nome": "Em debugg", "tipo": "scalar", "pos": [13, 8, 8, 3]},
+    {"arquivo": "10_nao_triados.sql", "nome": "Não triados", "tipo": "scalar", "pos": [13, 16, 8, 3]},
+    {"arquivo": "11_situacao_por_modelo.sql", "nome": "Situação por modelo", "tipo": "bar", "pos": [16, 0, 12, 9],
+     "visual": {"graph.dimensions": ["Modelo", "Situação"], "graph.metrics": ["Quantidade"], "stackable.stack_type": "stacked", "graph.show_values": true, "cores_por_serie": true}},
+    {"arquivo": "12_resumo_situacao.sql", "nome": "Resumo da triagem por modelo", "tipo": "table", "pos": [16, 12, 12, 9]},
+    {"titulo": "Entradas em logística reversa", "pos": [25, 0, 24, 1]},
+    {"arquivo": "13_entradas_hoje.sql", "nome": "Entradas hoje", "tipo": "scalar", "pos": [26, 0, 12, 3]},
+    {"arquivo": "14_entradas_7_dias.sql", "nome": "Últimos 7 dias", "tipo": "scalar", "pos": [26, 12, 12, 3]},
+    {"arquivo": "15_entradas_por_dia.sql", "nome": "Entradas por dia (últimos 14 dias)", "tipo": "bar", "pos": [29, 0, 24, 8],
+     "visual": {"graph.dimensions": ["Dia", "Grupo"], "graph.metrics": ["Quantidade"], "stackable.stack_type": "stacked", "cores_por_serie": true}}
+  ]
+}
