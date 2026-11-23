@@ -1,0 +1,7 @@
+-- Itens que entraram em reversa nos últimos 7 dias.
+SELECT COUNT(*) AS total
+FROM vw_itens_reversa
+WHERE (entrou_em AT TIME ZONE 'America/Sao_Paulo')::date > (now() AT TIME ZONE 'America/Sao_Paulo')::date - 7
+  [[AND modelo = {{modelo}}]]
+  [[AND grupo = {{grupo}}]]
+  [[AND situacao = {{situacao}}]]
