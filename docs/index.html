@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Painel de Logística Reversa</title>
+<style>
+:root {
+  color-scheme: light;
+  --bg: #f4f4f1;
+  --surface: #fcfcfb;
+  --border: #e3e2dd;
+  --text: #0b0b0b;
+  --text-2: #52514e;
+  --muted: #8a8984;
+  --grid: #ecebe6;
+  --g-rastreadores: #2a78d6;
+  --g-cameras: #eb6834;
+  --g-vega: #1baf7a;
+  --g-orion: #eda100;
+  --s-nao-triado: #a3a29b;
+  --s-debugg: #fab219;
+  --s-danificado: #d03b3b;
+  --accent: #2a78d6;
+}
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) {
+    color-scheme: dark;
+    --bg: #111110; --surface: #1a1a19; --border: #2c2c2a;
+    --text: #f0efec; --text-2: #c3c2b7; --muted: #8f8e88; --grid: #262624;
+    --g-rastreadores: #3987e5; --g-cameras: #d95926; --g-vega: #199e70; --g-orion: #c98500;
+    --s-nao-triado: #6f6e69; --accent: #3987e5;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #111110; --surface: #1a1a19; --border: #2c2c2a;
+  --text: #f0efec; --text-2: #c3c2b7; --muted: #8f8e88; --grid: #262624;
+  --g-rastreadores: #3987e5; --g-cameras: #d95926; --g-vega: #199e70; --g-orion: #c98500;
+  --s-nao-triado: #6f6e69; --accent: #3987e5;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font: 14px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+main { max-width: 1200px; margin: 0 auto; padding: 28px 16px 48px; }
+header { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
+h1 { font-size: 24px; margin: 0 0 4px; letter-spacing: -0.01em; }
+.sub { color: var(--text-2); margin: 0; }
+.tag { display: inline-block; font-size: 12px; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--border); color: var(--text-2); margin-left: 6px; }
+h2 { font-size: 16px; margin: 32px 0 4px; }
+.nota { color: var(--muted); font-size: 13px; margin: 0 0 12px; }
+.filtros { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; position: sticky; top: 0; z-index: 5; padding: 10px 0; background: var(--bg); }
+.filtros label { display: flex; align-items: center; gap: 6px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 4px 4px 4px 10px; color: var(--text-2); font-size: 13px; }
+.filtros select { font: inherit; color: var(--text); background: transparent; border: 0; padding: 4px; max-width: 170px; }
+.filtros label.ativo { border-color: var(--accent); }
+button { font: inherit; color: var(--text-2); background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 6px 12px; cursor: pointer; }
+button:hover { color: var(--text); }
+.grade { display: grid; gap: 12px; }
+.kpis { grid-template-columns: repeat(5, 1fr); }
+.kpis3 { grid-template-columns: repeat(3, 1fr); }
+.kpis2 { grid-template-columns: repeat(2, 1fr); }
+.duas { grid-template-columns: 2fr 1fr; }
+.meio { grid-template-columns: 1fr 1fr; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; min-width: 0; }
+.card h3 { margin: 0 0 10px; font-size: 13px; font-weight: 600; color: var(--text-2); display: flex; align-items: center; gap: 8px; }
+.ponto { width: 8px; height: 8px; border-radius: 2px; display: inline-block; flex: none; }
+.valor { font-size: 30px; font-weight: 650; letter-spacing: -0.02em; }
+.det { color: var(--muted); font-size: 12px; margin-top: 2px; }
+.legenda { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--text-2); margin-bottom: 8px; }
+.legenda span { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+svg { display: block; width: 100%; overflow: visible; }
+svg text { fill: var(--text-2); font-size: 12px; }
+svg .valor-barra { fill: var(--text); font-weight: 600; }
+svg .clicavel { cursor: pointer; }
+svg .clicavel:hover { opacity: 0.85; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th, td { text-align: right; padding: 7px 8px; border-bottom: 1px solid var(--grid); white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; }
+th { color: var(--muted); font-weight: 500; }
+.tabela { overflow-x: auto; }
+#dica { position: fixed; pointer-events: none; background: var(--text); color: var(--surface); font-size: 12px; padding: 6px 9px; border-radius: 6px; opacity: 0; transition: opacity .1s; z-index: 10; white-space: nowrap; }
+footer { margin-top: 32px; color: var(--muted); font-size: 12px; }
+footer a { color: var(--text-2); }
+@media (max-width: 900px) {
+  .kpis { grid-template-columns: repeat(2, 1fr); }
+  .duas, .meio { grid-template-columns: 1fr; }
+}
+@media (max-width: 520px) {
+  .kpis3, .kpis2 { grid-template-columns: 1fr; }
+  .valor { font-size: 26px; }
+}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div>
+      <h1>Logística Reversa · Dispositivos</h1>
+      <p class="sub">O que voltou dos clientes, em que estado chegou e em que ritmo está entrando.<span class="tag" id="gerado"></span></p>
+    </div>
+    <button id="tema" type="button" aria-label="Alternar tema claro e escuro">Tema</button>
+  </header>
+
+  <div class="filtros" role="group" aria-label="Filtros">
+    <label id="l-grupo">Grupo <select id="f-grupo"></select></label>
+    <label id="l-modelo">Modelo <select id="f-modelo"></select></label>
+    <label id="l-situacao">Situação <select id="f-situacao"></select></label>
+    <button id="limpar" type="button">Limpar filtros</button>
+  </div>
+  <p class="nota">Dica: clique numa barra, fatia ou item da legenda para filtrar o painel inteiro.</p>
+
+  <section class="grade kpis" id="kpis-grupo"></section>
+
+  <section class="grade duas" style="margin-top:12px">
+    <div class="card"><h3>Quantidade por modelo</h3><div class="legenda" id="leg-modelo"></div><svg id="g-modelo"></svg></div>
+    <div class="card"><h3>Distribuição por grupo</h3><svg id="g-grupo"></svg><div class="legenda" id="leg-grupo" style="margin-top:12px"></div></div>
+  </section>
+
+  <h2>Situação da triagem</h2>
+  <p class="nota">Rastreadores e câmeras cruzados pelo IMEI com a planilha de triagem da bancada. Leitores não passam pela triagem.</p>
+  <section class="grade kpis3" id="kpis-situacao"></section>
+  <section class="grade meio" style="margin-top:12px">
+    <div class="card"><h3>Situação por modelo</h3><div class="legenda" id="leg-situacao"></div><svg id="g-situacao"></svg></div>
+    <div class="card"><h3>Resumo por modelo</h3><div class="tabela"><table id="t-resumo"></table></div></div>
+  </section>
+
+  <h2>Entradas em logística reversa</h2>
+  <p class="nota">Itens que mudaram para a reversa em cada dia. O leitor Orion saiu de linha, por isso não aparece nas entradas recentes.</p>
+  <section class="grade kpis2" id="kpis-entradas"></section>
+  <div class="card" style="margin-top:12px"><h3>Entradas por dia · últimos 14 dias</h3><div class="legenda" id="leg-dias"></div><svg id="g-dias"></svg></div>
+
+  <footer>Dados 100% fictícios, gerados por <code>scripts/gerar_dados.py</code>. Versão estática do painel que roda no Metabase; o código está no repositório.</footer>
+</main>
+<div id="dica" role="tooltip"></div>
+
+<script src="dados.js"></script>
+<script>
+const D = window.DADOS;
+const GRUPOS = ["Rastreadores", "Câmeras", "Leitores Vega", "Leitores Orion"];
+const COR_GRUPO = { "Rastreadores": "--g-rastreadores", "Câmeras": "--g-cameras", "Leitores Vega": "--g-vega", "Leitores Orion": "--g-orion" };
+const COR_SITUACAO = { "Não triado": "--s-nao-triado", "Debugg": "--s-debugg", "Danificado": "--s-danificado" };
+const filtro = { grupo: "", modelo: "", situacao: "" };
+const nf = new Intl.NumberFormat("pt-BR");
+const pct = (a, b) => b ? (100 * a / b).toLocaleString("pt-BR", { maximumFractionDigits: 1 }) + "%" : "–";
+const cor = v => `var(${v})`;
+const NS = "http://www.w3.org/2000/svg";
+
+const itens = D.itens.map(([m, s, d]) => ({ modelo: D.modelos[m].modelo, grupo: D.modelos[m].grupo, situacao: D.situacoes[s], dias: d }));
+const ehEquipamento = g => g === "Rastreadores" || g === "Câmeras";
+
+function filtrados() {
+  return itens.filter(i =>
+    (!filtro.grupo || i.grupo === filtro.grupo) &&
+    (!filtro.modelo || i.modelo === filtro.modelo) &&
+    (!filtro.situacao || i.situacao === filtro.situacao));
+}
+function contar(lista, chave) {
+  const m = new Map();
+  for (const i of lista) { const k = chave(i); m.set(k, (m.get(k) || 0) + 1); }
+  return m;
+}
+
+// ---------- filtros ----------
+function preencherSelect(id, opcoes, rotuloTodos) {
+  const s = document.getElementById(id);
+  s.innerHTML = `<option value="">${rotuloTodos}</option>` + opcoes.map(o => `<option>${o}</option>`).join("");
+}
+preencherSelect("f-grupo", GRUPOS, "Todos");
+preencherSelect("f-modelo", D.modelos.map(m => m.modelo), "Todos");
+preencherSelect("f-situacao", D.situacoes, "Todas");
+for (const k of Object.keys(filtro)) {
+  document.getElementById("f-" + k).addEventListener("change", e => definir(k, e.target.value));
+}
+document.getElementById("limpar").addEventListener("click", () => { filtro.grupo = filtro.modelo = filtro.situacao = ""; render(); });
+function definir(chave, valor) {
+  filtro[chave] = filtro[chave] === valor ? "" : valor;
+  render();
+}
+
+// ---------- dica ----------
+const dica = document.getElementById("dica");
+function comDica(el, texto) {
+  el.addEventListener("mousemove", e => {
+    dica.textContent = texto; dica.style.opacity = 1;
+    const x = Math.min(e.clientX + 12, window.innerWidth - dica.offsetWidth - 8);
+    dica.style.left = x + "px"; dica.style.top = (e.clientY + 14) + "px";
+  });
+  el.addEventListener("mouseleave", () => dica.style.opacity = 0);
+}
+
+// ---------- helpers de svg ----------
+function el(tag, attrs = {}, pai) {
+  const n = document.createElementNS(NS, tag);
+  for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v);
+  if (pai) pai.appendChild(n);
+  return n;
+}
+function texto(pai, x, y, t, attrs = {}) { const n = el("text", { x, y, ...attrs }, pai); n.textContent = t; return n; }
+// Retângulo com as pontas de dado arredondadas e a base reta.
+function barraH(pai, x, y, w, h, raio) {
+  if (w <= 0) return null;
+  const r = Math.min(raio, w, h / 2);
+  return el("path", { d: `M${x},${y} H${x + w - r} Q${x + w},${y} ${x + w},${y + r} V${y + h - r} Q${x + w},${y + h} ${x + w - r},${y + h} H${x} Z` }, pai);
+}
+function barraV(pai, x, y, w, h, raio) {
+  if (h <= 0) return null;
+  const r = Math.min(raio, h, w / 2);
+  return el("path", { d: `M${x},${y + h} V${y + r} Q${x},${y} ${x + r},${y} H${x + w - r} Q${x + w},${y} ${x + w},${y + r} V${y + h} Z` }, pai);
+}
+function legenda(id, itensLeg, chave) {
+  const c = document.getElementById(id);
+  c.innerHTML = "";
+  for (const [nome, v] of itensLeg) {
+    const s = document.createElement("span");
+    s.innerHTML = `<i class="ponto" style="background:${cor(v)}"></i>${nome}`;
+    if (chave) { s.addEventListener("click", () => definir(chave, nome)); s.style.opacity = filtro[chave] && filtro[chave] !== nome ? .45 : 1; }
+    c.appendChild(s);
+  }
+}
+
+// ---------- cards de número ----------
+function kpi(titulo, valor, detalhe, corVar, onClick) {
+  const d = document.createElement("div");
+  d.className = "card";
+  d.innerHTML = `<h3>${corVar ? `<i class="ponto" style="background:${cor(corVar)}"></i>` : ""}${titulo}</h3><div class="valor">${nf.format(valor)}</div><div class="det">${detalhe || "&nbsp;"}</div>`;
+  if (onClick) { d.style.cursor = "pointer"; d.addEventListener("click", onClick); }
+  return d;
+}
+
+// ---------- gráficos ----------
+function graficoModelos(lista) {
+  const svg = document.getElementById("g-modelo"); svg.innerHTML = "";
+  const porModelo = contar(lista, i => i.modelo);
+  const linhas = D.modelos.map(m => ({ ...m, n: porModelo.get(m.modelo) || 0 }));
+  const W = svg.clientWidth || 640, rot = 130, h = 22, gap = 6, max = Math.max(1, ...linhas.map(l => l.n));
+  svg.setAttribute("viewBox", `0 0 ${W} ${linhas.length * (h + gap)}`);
+  svg.setAttribute("height", linhas.length * (h + gap));
+  const larg = W - rot - 56;
+  linhas.forEach((l, k) => {
+    const y = k * (h + gap);
+    texto(svg, rot - 10, y + h / 2 + 4, l.modelo, { "text-anchor": "end" });
+    el("rect", { x: rot, y, width: larg, height: h, fill: "transparent" }, svg);
+    const w = larg * l.n / max;
+    const b = barraH(svg, rot, y, w, h, 4);
+    if (b) {
+      b.setAttribute("fill", cor(COR_GRUPO[l.grupo])); b.setAttribute("class", "clicavel");
+      b.style.opacity = filtro.modelo && filtro.modelo !== l.modelo ? .35 : 1;
+      b.addEventListener("click", () => definir("modelo", l.modelo));
+      comDica(b, `${l.modelo} · ${l.grupo}: ${nf.format(l.n)} itens`);
+    }
+    texto(svg, rot + w + 6, y + h / 2 + 4, nf.format(l.n), { class: "valor-barra" });
+  });
+  legenda("leg-modelo", GRUPOS.map(g => [g, COR_GRUPO[g]]), "grupo");
+}
+
+function graficoGrupos(lista) {
+  const svg = document.getElementById("g-grupo"); svg.innerHTML = "";
+  const porGrupo = contar(lista, i => i.grupo);
+  const total = lista.length;
+  const S = 220, R = 100, r = 66, c = S / 2;
+  svg.setAttribute("viewBox", `0 0 ${S} ${S}`); svg.setAttribute("height", S);
+  svg.style.maxWidth = S + "px"; svg.style.margin = "0 auto";
+  let a0 = -Math.PI / 2;
+  for (const g of GRUPOS) {
+    const n = porGrupo.get(g) || 0;
+    if (!n) continue;
+    const ang = 2 * Math.PI * n / total, a1 = a0 + ang - (n < total ? 0.02 : 0);
+    const p = (rad, a) => [c + rad * Math.cos(a), c + rad * Math.sin(a)];
+    const grande = ang > Math.PI ? 1 : 0;
+    let d;
+    if (n === total) d = `M${c},${c - R} A${R},${R} 0 1 1 ${c - 0.01},${c - R} L${c - 0.01},${c - r} A${r},${r} 0 1 0 ${c},${c - r} Z`;
+    else { const [x0, y0] = p(R, a0), [x1, y1] = p(R, a1), [x2, y2] = p(r, a1), [x3, y3] = p(r, a0);
+      d = `M${x0},${y0} A${R},${R} 0 ${grande} 1 ${x1},${y1} L${x2},${y2} A${r},${r} 0 ${grande} 0 ${x3},${y3} Z`; }
+    const fatia = el("path", { d, fill: cor(COR_GRUPO[g]), class: "clicavel" }, svg);
+    fatia.addEventListener("click", () => definir("grupo", g));
+    comDica(fatia, `${g}: ${nf.format(n)} (${pct(n, total)})`);
+    a0 += ang;
+  }
+  texto(svg, c, c + 2, nf.format(total), { "text-anchor": "middle", class: "valor-barra", style: "font-size:22px" });
+  texto(svg, c, c + 20, "itens", { "text-anchor": "middle" });
+  const leg = document.getElementById("leg-grupo"); leg.innerHTML = "";
+  for (const g of GRUPOS) {
+    const n = porGrupo.get(g) || 0;
+    const s = document.createElement("span");
+    s.innerHTML = `<i class="ponto" style="background:${cor(COR_GRUPO[g])}"></i>${g} · <b>${pct(n, total)}</b>`;
+    s.addEventListener("click", () => definir("grupo", g));
+    leg.appendChild(s);
+  }
+}
+
+function graficoSituacao(lista) {
+  const svg = document.getElementById("g-situacao"); svg.innerHTML = "";
+  const equipamentos = D.modelos.filter(m => ehEquipamento(m.grupo));
+  const W = svg.clientWidth || 520, rot = 70, h = 22, gap = 8;
+  const dados = equipamentos.map(m => {
+    const doModelo = lista.filter(i => i.modelo === m.modelo);
+    return { ...m, total: doModelo.length, partes: D.situacoes.map(s => [s, doModelo.filter(i => i.situacao === s).length]) };
+  });
+  const max = Math.max(1, ...dados.map(d => d.total)), larg = W - rot - 56;
+  svg.setAttribute("viewBox", `0 0 ${W} ${dados.length * (h + gap)}`); svg.setAttribute("height", dados.length * (h + gap));
+  dados.forEach((d, k) => {
+    const y = k * (h + gap);
+    texto(svg, rot - 10, y + h / 2 + 4, d.modelo, { "text-anchor": "end" });
+    let x = rot;
+    const visiveis = d.partes.filter(([, n]) => n > 0);
+    visiveis.forEach(([s, n], j) => {
+      const w = larg * n / max - (j < visiveis.length - 1 ? 2 : 0);
+      const ultima = j === visiveis.length - 1;
+      const b = ultima ? barraH(svg, x, y, w, h, 4) : el("rect", { x, y, width: Math.max(w, 0), height: h }, svg);
+      if (!b) return;
+      b.setAttribute("fill", cor(COR_SITUACAO[s])); b.setAttribute("class", "clicavel");
+      b.addEventListener("click", () => { filtro.modelo = d.modelo; definir("situacao", s); });
+      comDica(b, `${d.modelo} · ${s}: ${nf.format(n)} (${pct(n, d.total)})`);
+      x += w + 2;
+    });
+    texto(svg, rot + larg * d.total / max + 6, y + h / 2 + 4, nf.format(d.total), { class: "valor-barra" });
+  });
+  legenda("leg-situacao", D.situacoes.map(s => [s, COR_SITUACAO[s]]), "situacao");
+}
+
+function tabelaResumo(lista) {
+  const linhas = D.modelos.filter(m => ehEquipamento(m.grupo)).map(m => {
+    const doModelo = lista.filter(i => i.modelo === m.modelo);
+    const n = s => doModelo.filter(i => i.situacao === s).length;
+    return [m.modelo, doModelo.length, n("Danificado"), n("Debugg"), n("Não triado")];
+  });
+  document.getElementById("t-resumo").innerHTML =
+    "<thead><tr><th>Modelo</th><th>Na reversa</th><th>Danificados</th><th>Debugg</th><th>Não triado</th><th>% danif.</th><th>% debugg</th></tr></thead><tbody>" +
+    linhas.map(([m, t, da, de, nt]) => `<tr><td>${m}</td><td>${nf.format(t)}</td><td>${nf.format(da)}</td><td>${nf.format(de)}</td><td>${nf.format(nt)}</td><td>${pct(da, t)}</td><td>${pct(de, t)}</td></tr>`).join("") +
+    "</tbody>";
+}
+
+function graficoDias(lista) {
+  const svg = document.getElementById("g-dias"); svg.innerHTML = "";
+  const W = svg.clientWidth || 1000, H = 220, base = H - 24, esq = 36;
+  const hoje = new Date();
+  const dias = Array.from({ length: 14 }, (_, k) => 13 - k);
+  const porDia = dias.map(d => ({ d, partes: GRUPOS.map(g => [g, lista.filter(i => i.dias === d && i.grupo === g).length]) }));
+  const max = Math.max(1, ...porDia.map(p => p.partes.reduce((a, [, n]) => a + n, 0)));
+  const passo = (W - esq) / dias.length, larg = Math.min(36, passo * 0.6);
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`); svg.setAttribute("height", H);
+  const topo = Math.ceil(max / 10) * 10;
+  for (const t of [0, topo / 2, topo]) {
+    const y = base - (base - 10) * t / topo;
+    el("line", { x1: esq, x2: W, y1: y, y2: y, stroke: "var(--grid)" }, svg);
+    texto(svg, esq - 6, y + 4, nf.format(t), { "text-anchor": "end" });
+  }
+  porDia.forEach((p, k) => {
+    const cx = esq + passo * k + passo / 2, x = cx - larg / 2;
+    const data = new Date(hoje); data.setDate(hoje.getDate() - p.d);
+    const rotulo = data.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+    if (k % 2 === 0 || W > 700) texto(svg, cx, H - 6, rotulo, { "text-anchor": "middle" });
+    let y = base;
+    const visiveis = p.partes.filter(([, n]) => n > 0);
+    visiveis.forEach(([g, n], j) => {
+      const h = (base - 10) * n / topo - (j < visiveis.length - 1 ? 2 : 0);
+      y -= h;
+      const b = j === visiveis.length - 1 ? barraV(svg, x, y, larg, h, 4) : el("rect", { x, y, width: larg, height: Math.max(h, 0) }, svg);
+      if (b) { b.setAttribute("fill", cor(COR_GRUPO[g])); b.setAttribute("class", "clicavel");
+        b.addEventListener("click", () => definir("grupo", g));
+        comDica(b, `${rotulo} · ${g}: ${nf.format(n)}`); }
+      y -= 2;
+    });
+  });
+  legenda("leg-dias", GRUPOS.map(g => [g, COR_GRUPO[g]]), "grupo");
+}
+
+// ---------- render ----------
+function render() {
+  for (const k of Object.keys(filtro)) {
+    document.getElementById("f-" + k).value = filtro[k];
+    document.getElementById("l-" + k).classList.toggle("ativo", !!filtro[k]);
+  }
+  const lista = filtrados();
+  const porGrupo = contar(lista, i => i.grupo);
+
+  const kg = document.getElementById("kpis-grupo"); kg.innerHTML = "";
+  kg.appendChild(kpi("Total em reversa", lista.length, "todos os grupos"));
+  for (const g of GRUPOS) {
+    const n = porGrupo.get(g) || 0;
+    kg.appendChild(kpi(g === "Leitores Orion" ? "Leitores Orion (legado)" : g, n, pct(n, lista.length) + " do total", COR_GRUPO[g], () => definir("grupo", g)));
+  }
+
+  const equip = lista.filter(i => ehEquipamento(i.grupo));
+  const porSit = contar(equip, i => i.situacao);
+  const ks = document.getElementById("kpis-situacao"); ks.innerHTML = "";
+  for (const s of ["Danificado", "Debugg", "Não triado"]) {
+    const n = porSit.get(s) || 0;
+    ks.appendChild(kpi(s === "Debugg" ? "Em debugg" : s === "Não triado" ? "Não triados" : "Danificados", n, pct(n, equip.length) + " dos rastreadores e câmeras", COR_SITUACAO[s], () => definir("situacao", s)));
+  }
+
+  const ke = document.getElementById("kpis-entradas"); ke.innerHTML = "";
+  const hoje = lista.filter(i => i.dias === 0).length, sete = lista.filter(i => i.dias < 7).length;
+  ke.appendChild(kpi("Entradas hoje", hoje, "desde 00h"));
+  ke.appendChild(kpi("Últimos 7 dias", sete, `média de ${nf.format(Math.round(sete / 7))} por dia`));
+
+  graficoModelos(lista); graficoGrupos(lista); graficoSituacao(lista); tabelaResumo(lista); graficoDias(lista);
+}
+
+document.getElementById("gerado").textContent = "dados fictícios · " + D.geradoEm;
+document.getElementById("tema").addEventListener("click", () => {
+  const atual = document.documentElement.dataset.theme || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  document.documentElement.dataset.theme = atual === "dark" ? "light" : "dark";
+  render();
+});
+let pendente; addEventListener("resize", () => { clearTimeout(pendente); pendente = setTimeout(render, 120); });
+render();
+</script>
+</body>
+</html>
