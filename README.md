@@ -4,7 +4,7 @@ Painel em Metabase para acompanhar os equipamentos de telemetria que voltam dos 
 
 Este repositório é uma reconstrução do projeto que desenvolvi no trabalho, com **esquema genérico e dados 100% fictícios**. Os modelos, as marcas (Vega e Orion) e os números foram inventados. A lógica, os problemas encontrados e as decisões de modelagem são os mesmos do projeto original.
 
-**Demo interativa:** abra `docs/index.html` no navegador, ou ative o GitHub Pages na pasta `docs/` para ter um link. É uma versão estática que roda sem instalar nada.
+**[Ver a demo interativa](https://lucasmart7.github.io/painel-logistica-reversa/)**: versão estática do painel, roda no navegador sem instalar nada.
 
 ![Painel no tema claro](docs/img/painel-claro.png)
 
